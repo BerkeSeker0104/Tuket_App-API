@@ -4,11 +4,11 @@ namespace TuketAppAPI.Models.Auth
 {
     public class UserRegisterRequest
     {
-        [Required] // ✅ Boş olamaz
+        [Required] //  Boş olamaz
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [EmailAddress] // ✅ Geçerli bir e-posta olmalı
+        [EmailAddress] //  Geçerli bir e-posta olmalı
         public string Email { get; set; } = string.Empty;
 
         [Required]

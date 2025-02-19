@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TuketAppAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3bad6d653aa1aef6cd57ed10048c0ba6b31b7838")]
 [assembly: System.Reflection.AssemblyProductAttribute("TuketAppAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TuketAppAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

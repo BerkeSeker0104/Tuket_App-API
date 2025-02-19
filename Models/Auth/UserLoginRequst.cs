@@ -5,7 +5,7 @@ namespace TuketAppAPI.Models.Auth
     public class UserLoginRequest
     {
         [Required]
-        [EmailAddress] // ✅ Geçerli bir e-posta olmalı
+        [EmailAddress] //  Geçerli bir e-posta olmalı
         public string Email { get; set; } = string.Empty;
 
         [Required]

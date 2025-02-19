@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using TuketAppAPI.Models;
-using TuketAppAPI.Models.Auth; // ✅ DTO'ları ekledik
+using TuketAppAPI.Models.Auth; //  DTO'ları ekledik
 
 namespace TuketAppAPI.Controllers
 {
@@ -55,9 +55,9 @@ namespace TuketAppAPI.Controllers
             return Ok(new { token });
         }
 
-        // ✅ Kullanıcı Bilgilerini Getiren Endpoint (GET /api/Users/me)
+        //  Kullanıcı Bilgilerini Getiren Endpoint (GET /api/Users/me)
         [HttpGet("me")]
-        [Authorize]  // 🔐 Yetkilendirme Gerektirir
+        [Authorize]  //  Yetkilendirme Gerektirir
         public async Task<IActionResult> GetUserProfile()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier); // Token'dan kullanıcı ID'sini al

@@ -6,10 +6,10 @@ namespace TuketAppAPI.Models
     {
         public TuketDbContext(DbContextOptions<TuketDbContext> options) : base(options) { }
 
-        // ✅ Kullanıcılar tablosu
+        //  Kullanıcılar tablosu
         public DbSet<User> Users { get; set; }
 
-        // ✅ İşletmeler tablosu
+        //  İşletmeler tablosu
         public DbSet<Business> Businesses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

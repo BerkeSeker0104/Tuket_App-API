@@ -6,10 +6,10 @@ namespace TuketAppAPI.Models
     {
         public int Id { get; set; }
 
-        [Required] // ✅ Name boş geçilemez!
+        [Required] //  Name boş geçilemez!
         public string Name { get; set; } = string.Empty; // ✅ Varsayılan değer eklendi.
 
-        [Required] // ✅ Address boş geçilemez!
+        [Required] //  Address boş geçilemez!
         public string Address { get; set; } = string.Empty; // ✅ Varsayılan değer eklendi.
 
         public double Latitude { get; set; }

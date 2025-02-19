@@ -7,28 +7,28 @@ using TuketAppAPI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ Veritabanı Bağlantısını Yapılandır
+//  Veritabanı Bağlantısını Yapılandır
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<TuketDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// ✅ JWT Authentication Ayarları
+//  JWT Authentication Ayarları
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 
-// ✅ Secret Key Kontrolü ve Dönüşümü (Base64 yerine UTF-8 kullanıldı)
+//  Secret Key Kontrolü ve Dönüşümü (Base64 yerine UTF-8 kullanıldı)
 var secretKeyString = jwtSettings["Secret"];
 if (string.IsNullOrEmpty(secretKeyString))
 {
-    throw new Exception("🚨 Error: Secret Key is missing from configuration!");
+    throw new Exception(" Error: Secret Key is missing from configuration!");
 }
 
-// 🔥 **Base64 yerine UTF-8 olarak dönüştür**
+//  **Base64 yerine UTF-8 olarak dönüştür**
 var secretKeyBytes = Convert.FromBase64String(secretKeyString);
 var secretKey = new SymmetricSecurityKey(secretKeyBytes);
 
-Console.WriteLine($"✅ Loaded Secret Key: {secretKeyString}");
+Console.WriteLine($" Loaded Secret Key: {secretKeyString}");
 
-// ✅ Authentication & Authorization Middleware
+//  Authentication & Authorization Middleware
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -41,7 +41,7 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = secretKey,  // ✅ UTF-8 ile encode edilen Secret Key Kullanıldı
+        IssuerSigningKey = secretKey,  //  UTF-8 ile encode edilen Secret Key Kullanıldı
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidIssuer = jwtSettings["Issuer"],
@@ -51,7 +51,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// ✅ API Servislerini Ekleyelim
+//  API Servislerini Ekleyelim
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -84,9 +84,9 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// ✅ Uygulamayı Başlat
+//  Uygulamayı Başlat
 var app = builder.Build();
-Console.WriteLine($"🚀 Application is running in {app.Environment.EnvironmentName} mode.");
+Console.WriteLine($" Application is running in {app.Environment.EnvironmentName} mode.");
 
 if (app.Environment.IsDevelopment())
 {

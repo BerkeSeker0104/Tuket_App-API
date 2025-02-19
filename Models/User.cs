@@ -6,11 +6,11 @@ namespace TuketAppAPI.Models
     {
         public int Id { get; set; }
 
-        [Required] // ✅ Zorunlu alan
+        [Required] //  Zorunlu alan
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [EmailAddress] // ✅ Geçerli bir e-posta olmalı
+        [EmailAddress] //  Geçerli bir e-posta olmalı
         public string Email { get; set; } = string.Empty;
 
         [Required]
