@@ -49,6 +49,7 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero // **Token süreleri kesin olsun**
     };
+    
 });
 
 //  API Servislerini Ekleyelim

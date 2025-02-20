@@ -112,3 +112,4 @@
 /Users/berkeseker/Documents/Projects/TuketAppAPI/obj/Debug/net8.0/TuketAppAPI.pdb
 /Users/berkeseker/Documents/Projects/TuketAppAPI/obj/Debug/net8.0/TuketAppAPI.genruntimeconfig.cache
 /Users/berkeseker/Documents/Projects/TuketAppAPI/obj/Debug/net8.0/ref/TuketAppAPI.dll
+/Users/berkeseker/Documents/Projects/TuketAppAPI/obj/Debug/net8.0/TuketAppAPI.sourcelink.json

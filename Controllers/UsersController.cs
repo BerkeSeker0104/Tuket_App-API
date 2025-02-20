@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using TuketAppAPI.Models;
-using TuketAppAPI.Models.Auth; //  DTO'ları ekledik
+using TuketAppAPI.Models.Auth;
 
 namespace TuketAppAPI.Controllers
 {
@@ -24,6 +24,9 @@ namespace TuketAppAPI.Controllers
             _configuration = configuration;
         }
 
+        /// <summary>
+        /// Kullanıcı kaydı oluşturur.
+        /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterRequest request)
         {
@@ -35,15 +38,18 @@ namespace TuketAppAPI.Controllers
                 Name = request.Name,
                 Email = request.Email,
                 Password = HashPassword(request.Password),
-                Role = "consumer",
+                Role = request.Role ?? "consumer", // Varsayılan olarak "consumer" atanır.
                 CreatedAt = DateTime.UtcNow
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-            return Ok("Kullanıcı başarıyla oluşturuldu.");
+            return Ok(new { message = "Kullanıcı başarıyla oluşturuldu." });
         }
 
+        /// <summary>
+        /// Kullanıcı giriş yapar ve JWT token alır.
+        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
         {
@@ -55,27 +61,23 @@ namespace TuketAppAPI.Controllers
             return Ok(new { token });
         }
 
-        //  Kullanıcı Bilgilerini Getiren Endpoint (GET /api/Users/me)
+        /// <summary>
+        /// Kullanıcı profilini getirir. (Yetkilendirme gerektirir)
+        /// </summary>
         [HttpGet("me")]
-        [Authorize]  //  Yetkilendirme Gerektirir
+        [Authorize]
         public async Task<IActionResult> GetUserProfile()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier); // Token'dan kullanıcı ID'sini al
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
-            {
                 return Unauthorized(new { message = "Yetkilendirme başarısız." });
-            }
 
             if (!int.TryParse(userIdClaim.Value, out int userId))
-            {
                 return Unauthorized(new { message = "Geçersiz kullanıcı ID'si." });
-            }
 
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
-            {
                 return NotFound(new { message = "Kullanıcı bulunamadı." });
-            }
 
             return Ok(new
             {
@@ -86,12 +88,19 @@ namespace TuketAppAPI.Controllers
             });
         }
 
+        /// <summary>
+        /// Şifreyi SHA-256 ile hashler.
+        /// </summary>
         private string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();
-            return BitConverter.ToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(password))).Replace("-", "").ToLower();
+            return BitConverter.ToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(password)))
+                .Replace("-", "").ToLower();
         }
 
+        /// <summary>
+        /// Kullanıcı için JWT token oluşturur.
+        /// </summary>
         private string GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");

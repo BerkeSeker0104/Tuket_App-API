@@ -6,16 +6,15 @@ namespace TuketAppAPI.Models
     {
         public TuketDbContext(DbContextOptions<TuketDbContext> options) : base(options) { }
 
-        //  Kullanıcılar tablosu
         public DbSet<User> Users { get; set; }
-
-        //  İşletmeler tablosu
         public DbSet<Business> Businesses { get; set; }
+        public DbSet<Product> Products { get; set; } //  Ürünler eklendi
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>().ToTable("users");
             modelBuilder.Entity<Business>().ToTable("businesses");
+            modelBuilder.Entity<Product>().ToTable("products"); //  Yeni ürün tablosu
         }
     }
 }

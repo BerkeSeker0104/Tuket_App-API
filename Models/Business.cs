@@ -4,17 +4,23 @@ namespace TuketAppAPI.Models
 {
     public class Business
     {
-        public int Id { get; set; }
+        public int Id { get; set; } //  Otomatik olarak oluşturulmalı (Veritabanında AutoIncrement olacak)
 
-        [Required] //  Name boş geçilemez!
-        public string Name { get; set; } = string.Empty; // ✅ Varsayılan değer eklendi.
+        [Required]  //  Boş olamaz
+        public string Name { get; set; } = string.Empty;   
 
-        [Required] //  Address boş geçilemez!
-        public string Address { get; set; } = string.Empty; // ✅ Varsayılan değer eklendi.
+        [Required]  //  Boş olamaz
+        public string Address { get; set; } = string.Empty;
 
-        public double Latitude { get; set; }
+        [Required]  //  Boş olamaz
+        public double Latitude { get; set; }  
+
+        [Required]  //  Boş olamaz
         public double Longitude { get; set; }
+
+        [Required]  //  İşletmeyi oluşturan kullanıcı ID’si zorunlu
         public int UserId { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; //  Varsayılan olarak güncel tarih atanmalı
     }
 }
