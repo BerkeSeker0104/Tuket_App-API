@@ -4,8 +4,23 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TuketAppAPI.Models;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//  CORS Politikası Ekle
+var allowedOrigins = "_allowedOrigins";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: allowedOrigins,
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000", "http://127.0.0.1:3000") //  İzin verilen kaynakları belirle (Flutter, Web)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials(); // Yetkilendirme gerektiren istekler için
+        });
+});
 
 //  Veritabanı Bağlantısını Yapılandır
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -22,10 +37,8 @@ if (string.IsNullOrEmpty(secretKeyString))
     throw new Exception(" Error: Secret Key is missing from configuration!");
 }
 
-//  **Base64 yerine UTF-8 olarak dönüştür**
 var secretKeyBytes = Convert.FromBase64String(secretKeyString);
 var secretKey = new SymmetricSecurityKey(secretKeyBytes);
-
 Console.WriteLine($" Loaded Secret Key: {secretKeyString}");
 
 //  Authentication & Authorization Middleware
@@ -41,7 +54,7 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = secretKey,  //  UTF-8 ile encode edilen Secret Key Kullanıldı
+        IssuerSigningKey = secretKey,  
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidIssuer = jwtSettings["Issuer"],
@@ -49,7 +62,6 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero // **Token süreleri kesin olsun**
     };
-    
 });
 
 //  API Servislerini Ekleyelim
@@ -88,6 +100,9 @@ builder.Services.AddSwaggerGen(options =>
 //  Uygulamayı Başlat
 var app = builder.Build();
 Console.WriteLine($" Application is running in {app.Environment.EnvironmentName} mode.");
+
+//  CORS Middleware Ekle (CORS'u Uygula)
+app.UseCors(allowedOrigins);
 
 if (app.Environment.IsDevelopment())
 {

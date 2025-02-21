@@ -8,6 +8,7 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using TuketAppAPI.Models;
 using TuketAppAPI.Models.Auth;
+using Serilog; //  Serilog kütüphanesi eklendi
 
 namespace TuketAppAPI.Controllers
 {
@@ -24,87 +25,119 @@ namespace TuketAppAPI.Controllers
             _configuration = configuration;
         }
 
-        /// <summary>
-        /// Kullanıcı kaydı oluşturur.
-        /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterRequest request)
         {
-            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
-                return BadRequest("Bu e-posta zaten kayıtlı.");
-
-            var user = new User
+            try
             {
-                Name = request.Name,
-                Email = request.Email,
-                Password = HashPassword(request.Password),
-                Role = request.Role ?? "consumer", // Varsayılan olarak "consumer" atanır.
-                CreatedAt = DateTime.UtcNow
-            };
+                Log.Information(" Yeni kullanıcı kaydı yapılıyor: {Email}", request.Email);
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "Kullanıcı başarıyla oluşturuldu." });
+                if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+                {
+                    Log.Warning("⚠️ Kayıt başarısız: {Email} zaten mevcut.", request.Email);
+                    return BadRequest("Bu e-posta zaten kayıtlı.");
+                }
+
+                var user = new User
+                {
+                    Name = request.Name,
+                    Email = request.Email,
+                    Password = HashPassword(request.Password),
+                    Role = request.Role ?? "consumer",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                Log.Information(" Kullanıcı başarıyla kaydedildi: {Email}", user.Email);
+                return Ok("Kullanıcı başarıyla oluşturuldu.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, " Kullanıcı kaydı sırasında hata oluştu: {Email}", request.Email);
+                return StatusCode(500, "Sunucu hatası. Lütfen daha sonra tekrar deneyiniz.");
+            }
         }
 
-        /// <summary>
-        /// Kullanıcı giriş yapar ve JWT token alır.
-        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
         {
-            var foundUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-            if (foundUser == null || foundUser.Password != HashPassword(request.Password))
-                return Unauthorized("Geçersiz e-posta veya şifre.");
+            try
+            {
+                Log.Information("🔑 Kullanıcı giriş yapıyor: {Email}", request.Email);
 
-            var token = GenerateJwtToken(foundUser);
-            return Ok(new { token });
+                var foundUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+                if (foundUser == null || foundUser.Password != HashPassword(request.Password))
+                {
+                    Log.Warning("⚠️ Başarısız giriş denemesi: {Email}", request.Email);
+                    return Unauthorized("Geçersiz e-posta veya şifre.");
+                }
+
+                var token = GenerateJwtToken(foundUser);
+
+                Log.Information(" Kullanıcı giriş yaptı: {Email}", request.Email);
+                return Ok(new { token });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, " Kullanıcı girişi sırasında hata oluştu: {Email}", request.Email);
+                return StatusCode(500, "Sunucu hatası. Lütfen daha sonra tekrar deneyiniz.");
+            }
         }
 
-        /// <summary>
-        /// Kullanıcı profilini getirir. (Yetkilendirme gerektirir)
-        /// </summary>
         [HttpGet("me")]
-        [Authorize]
+        [Authorize]  
         public async Task<IActionResult> GetUserProfile()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                return Unauthorized(new { message = "Yetkilendirme başarısız." });
-
-            if (!int.TryParse(userIdClaim.Value, out int userId))
-                return Unauthorized(new { message = "Geçersiz kullanıcı ID'si." });
-
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null)
-                return NotFound(new { message = "Kullanıcı bulunamadı." });
-
-            return Ok(new
+            try
             {
-                id = user.Id,
-                name = user.Name,
-                email = user.Email,
-                role = user.Role
-            });
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null)
+                {
+                    Log.Warning("⚠️ Yetkilendirme başarısız. Kullanıcı ID bulunamadı.");
+                    return Unauthorized(new { message = "Yetkilendirme başarısız." });
+                }
+
+                if (!int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    Log.Warning("⚠️ Geçersiz kullanıcı ID'si.");
+                    return Unauthorized(new { message = "Geçersiz kullanıcı ID'si." });
+                }
+
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    Log.Warning("⚠️ Kullanıcı bulunamadı. ID: {UserId}", userId);
+                    return NotFound(new { message = "Kullanıcı bulunamadı." });
+                }
+
+                Log.Information(" Kullanıcı bilgileri getirildi: {Email}", user.Email);
+                return Ok(new
+                {
+                    id = user.Id,
+                    name = user.Name,
+                    email = user.Email,
+                    role = user.Role
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, " Kullanıcı bilgileri getirilirken hata oluştu.");
+                return StatusCode(500, "Sunucu hatası. Lütfen daha sonra tekrar deneyiniz.");
+            }
         }
 
-        /// <summary>
-        /// Şifreyi SHA-256 ile hashler.
-        /// </summary>
         private string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();
-            return BitConverter.ToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(password)))
-                .Replace("-", "").ToLower();
+            return BitConverter.ToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(password))).Replace("-", "").ToLower();
         }
 
-        /// <summary>
-        /// Kullanıcı için JWT token oluşturur.
-        /// </summary>
         private string GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
-            var secretKeyString = jwtSettings["Secret"] ?? throw new Exception("🚨 Error: Secret Key is missing from configuration!");
+            var secretKeyString = jwtSettings["Secret"] ?? throw new Exception(" Error: Secret Key is missing from configuration!");
 
             var key = new SymmetricSecurityKey(Convert.FromBase64String(secretKeyString));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

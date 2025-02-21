@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using Serilog;
 using TuketAppAPI.Models;
 
 namespace TuketAppAPI.Controllers
@@ -16,49 +17,56 @@ namespace TuketAppAPI.Controllers
             _context = context;
         }
 
-        // 1. İşletme Oluşturma (POST /api/Businesses)
+        // İşletme Ekleme (Sadece admin)
         [HttpPost]
-        [Authorize(Roles = "admin")] // Sadece adminler işletme ekleyebilir
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> CreateBusiness([FromBody] Business business)
         {
             if (business == null || string.IsNullOrEmpty(business.Name))
             {
+                Log.Warning("Eksik işletme bilgisi ile kayıt yapılmaya çalışıldı.");
                 return BadRequest("İşletme bilgileri eksik!");
             }
 
             _context.Businesses.Add(business);
             await _context.SaveChangesAsync();
+            Log.Information("Yeni işletme oluşturuldu: {@Business}", business);
             return CreatedAtAction(nameof(GetBusiness), new { id = business.Id }, business);
         }
 
-        // 2. Tüm İşletmeleri Listeleme (GET /api/Businesses)
+        // Tüm İşletmeleri Listeleme
         [HttpGet]
         public async Task<IActionResult> GetBusinesses()
         {
             var businesses = await _context.Businesses.ToListAsync();
+            Log.Information("Tüm işletmeler listelendi.");
             return Ok(businesses);
         }
 
-        // 3. Belirli Bir İşletmeyi Getirme (GET /api/Businesses/{id})
+        // Belirli Bir İşletmeyi Getirme
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBusiness(int id)
         {
             var business = await _context.Businesses.FindAsync(id);
             if (business == null)
             {
+                Log.Warning("İşletme bulunamadı. ID: {BusinessId}", id);
                 return NotFound("İşletme bulunamadı.");
             }
+
+            Log.Information("İşletme getirildi. ID: {BusinessId}", id);
             return Ok(business);
         }
 
-        // 4. İşletme Güncelleme (PUT /api/Businesses/{id})
+        // İşletme Güncelleme (Sadece admin)
         [HttpPut("{id}")]
-        [Authorize(Roles = "admin")] // Sadece adminler güncelleyebilir
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateBusiness(int id, [FromBody] Business updatedBusiness)
         {
             var business = await _context.Businesses.FindAsync(id);
             if (business == null)
             {
+                Log.Warning("Güncellenecek işletme bulunamadı. ID: {BusinessId}", id);
                 return NotFound("İşletme bulunamadı.");
             }
 
@@ -68,22 +76,25 @@ namespace TuketAppAPI.Controllers
             business.Longitude = updatedBusiness.Longitude;
             await _context.SaveChangesAsync();
 
+            Log.Information("İşletme güncellendi. ID: {BusinessId}", id);
             return Ok("İşletme güncellendi.");
         }
 
-        // 5. İşletme Silme (DELETE /api/Businesses/{id})
+        // İşletme Silme (Sadece admin)
         [HttpDelete("{id}")]
-        [Authorize(Roles = "admin")] // Sadece adminler silebilir
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteBusiness(int id)
         {
             var business = await _context.Businesses.FindAsync(id);
             if (business == null)
             {
+                Log.Warning("Silinecek işletme bulunamadı. ID: {BusinessId}", id);
                 return NotFound("İşletme bulunamadı.");
             }
 
             _context.Businesses.Remove(business);
             await _context.SaveChangesAsync();
+            Log.Information("İşletme silindi. ID: {BusinessId}", id);
             return Ok("İşletme başarıyla silindi.");
         }
     }
